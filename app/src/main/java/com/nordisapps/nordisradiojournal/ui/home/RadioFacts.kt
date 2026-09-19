@@ -29,6 +29,8 @@ import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 fun FactsCarousel(cards: List<RadioFact>, currentLanguage: String) {
+    if (cards.isEmpty()) return
+
     val pagerState = rememberPagerState(pageCount = { cards.size })
 
     LaunchedEffect(cards.size) {
