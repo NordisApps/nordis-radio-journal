@@ -81,6 +81,11 @@
     <string name="player_setting_show_speed_desc">Відображати індикатор стабільності з\'єднання під час прослуховування</string>
     <string name="player_setting_icy_metadata">ICY-метадані</string>
     <string name="player_setting_icy_metadata_desc">Показувати назву треку з потоку станції</string>
+    <string name="select_country_title">Виберіть країну</string>
+    <string name="select_city_title">Виберіть місто</string>
+    <string name="coverage_title">Покриття</string>
+    <string name="categories_title">Категорії</string>
+    <string name="clear">Очистити</string>
     <string name="nav_account">Акаунт</string>
     <string name="not_signed_in">Ви не авторизовані</string>
 </resources>

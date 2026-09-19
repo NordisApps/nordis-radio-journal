@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -28,6 +29,23 @@ class StationsViewModel(
     init {
         loadStations()
     }
+
+    val availableCountries: StateFlow<List<String>> = shared.uiState
+        .map { state ->
+            state.stations.mapNotNull { it.country?.trim() }.distinct().sorted()
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val citiesByCountry: StateFlow<Map<String, List<String>>> = shared.uiState
+        .map { state ->
+            state.stations
+                .filter { it.country != null && it.mainCity != null }
+                .groupBy { it.country!!.trim() }
+                .mapValues { (_, list) ->
+                    list.map { it.mainCity!!.trim() }.distinct().sorted()
+                }
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
     fun setSearchQuery(query: String) {
         _filters.update { it.copy(query = query) }

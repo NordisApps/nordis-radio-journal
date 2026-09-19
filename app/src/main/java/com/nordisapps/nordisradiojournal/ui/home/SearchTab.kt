@@ -9,6 +9,7 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -40,6 +41,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -57,6 +59,8 @@ import androidx.compose.ui.unit.dp
 import com.nordisapps.nordisradiojournal.R
 import com.nordisapps.nordisradiojournal.data.Station
 import com.nordisapps.nordisradiojournal.ui.components.RadioStationItem
+import com.nordisapps.nordisradiojournal.ui.helpers.CityLocalization
+import com.nordisapps.nordisradiojournal.ui.helpers.CountryLocalization
 import com.nordisapps.nordisradiojournal.ui.helpers.rememberCategoryDisplayNames
 
 data class LocationItem(val key: String, val displayName: String)
@@ -68,6 +72,8 @@ fun SearchTab(
     selectedCountryKey: String?,
     selectedCityKey: String?,
     selectedCoverageKeys: Set<String>,
+    availableCountries: List<String>,
+    citiesByCountry: Map<String, List<String>>,
     filteredStations: List<Station>,
     favourites: List<Station>,
     onSearchQueryChange: (String) -> Unit,
@@ -77,36 +83,14 @@ fun SearchTab(
     onFavouriteClick: (Station) -> Unit,
     onListenClick: (Station) -> Unit,
     selectedCategoryKeys: Set<String>,
-    onCategorySelected: (Set<String>) -> Unit
+    onCategorySelected: (Set<String>) -> Unit,
+    hasMiniPlayer: Boolean
 ) {
     var isSearchFocused by rememberSaveable { mutableStateOf(false) }
 
-    val keyRomania = stringResource(R.string.key_country_romania)
-    val keyUkraine = stringResource(R.string.key_country_ukraine)
-
-    val displayRomania = stringResource(R.string.country_romania)
-    val displayUkraine = stringResource(R.string.country_ukraine)
-
-    val countries = remember(displayRomania, displayUkraine) {
-        listOf(
-            LocationItem(keyRomania, displayRomania),
-            LocationItem(keyUkraine, displayUkraine)
-        )
+    val countries = remember(availableCountries) {
+        availableCountries.map { LocationItem(key = it, displayName = it) }
     }
-
-    val keyConstanta = stringResource(R.string.key_city_constanta)
-    val displayConstanta = stringResource(R.string.city_constanta)
-    val keyBrasov = stringResource(R.string.key_city_brasov)
-    val displayBrasov = stringResource(R.string.city_brasov)
-    val keyBucharest = stringResource(R.string.key_city_bucharest)
-    val displayBucharest = stringResource(R.string.city_bucharest)
-
-    val keyOdessa = stringResource(R.string.key_city_odessa)
-    val displayOdessa = stringResource(R.string.city_odessa)
-    val keyKiev = stringResource(R.string.key_city_kiev)
-    val displayKiev = stringResource(R.string.city_kiev)
-    val keyNikolaev = stringResource(R.string.key_city_nikolaev)
-    val displayNikolaev = stringResource(R.string.city_nikolaev)
 
     val keyMusic = stringResource(R.string.key_category_music)
     val displayMusic = stringResource(R.string.category_music)
@@ -139,25 +123,6 @@ fun SearchTab(
             LocationItem(keySports, displaySports),
             LocationItem(keyCultural, displayCultural),
             LocationItem(keyRegional, displayRegional)
-        )
-    }
-
-    val citiesByCountry = remember(
-        keyRomania, keyUkraine, keyConstanta, displayConstanta, keyBrasov, displayBrasov,
-        keyBucharest, displayBucharest, keyOdessa, displayOdessa, keyKiev, displayKiev,
-        keyNikolaev, displayNikolaev
-    ) {
-        mapOf(
-            keyRomania to listOf(
-                LocationItem(keyConstanta, displayConstanta),
-                LocationItem(keyBrasov, displayBrasov),
-                LocationItem(keyBucharest, displayBucharest)
-            ),
-            keyUkraine to listOf(
-                LocationItem(keyOdessa, displayOdessa),
-                LocationItem(keyKiev, displayKiev),
-                LocationItem(keyNikolaev, displayNikolaev)
-            )
         )
     }
 
@@ -226,7 +191,7 @@ fun SearchTab(
                     onClick = { showCountrySheet = true },
                     label = {
                         Text(
-                            text = countries.find { it.key == selectedCountryKey }?.displayName
+                            text = selectedCountryKey?.let { CountryLocalization.displayName(it) }
                                 ?: stringResource(R.string.select_country)
                         )
                     },
@@ -248,6 +213,11 @@ fun SearchTab(
                     ModalBottomSheet(
                         onDismissRequest = { showCountrySheet = false }
                     ) {
+                        Text(
+                            text = stringResource(R.string.select_country_title),
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp)
+                        )
                         LazyColumn(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -255,7 +225,7 @@ fun SearchTab(
                         ) {
                             items(countries) { countryItem ->
                                 Text(
-                                    text = countryItem.displayName,
+                                    text = CountryLocalization.displayName(countryItem.key),
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clickable {
@@ -271,14 +241,16 @@ fun SearchTab(
                 }
 
                 if (selectedCountryKey != null) {
-                    val cities = citiesByCountry[selectedCountryKey] ?: emptyList()
+                    val cities = remember(citiesByCountry, selectedCountryKey) {
+                        (citiesByCountry[selectedCountryKey] ?: emptyList()).map { LocationItem(it, it) }
+                    }
 
                     FilterChip(
                         selected = selectedCityKey != null,
                         onClick = { showCitySheet = true },
                         label = {
                             Text(
-                                text = cities.find { it.key == selectedCityKey }?.displayName
+                                text = selectedCityKey?.let { CityLocalization.displayName(it) }
                                     ?: stringResource(R.string.select_city)
                             )
                         },
@@ -297,9 +269,19 @@ fun SearchTab(
                     )
 
                     if (showCitySheet) {
+                        val citySheetState = rememberModalBottomSheetState(
+                            skipPartiallyExpanded = true
+                        )
+
                         ModalBottomSheet(
-                            onDismissRequest = { showCitySheet = false }
+                            onDismissRequest = { showCitySheet = false },
+                            sheetState = citySheetState
                         ) {
+                            Text(
+                                text = stringResource(R.string.select_city_title),
+                                style = MaterialTheme.typography.titleMedium,
+                                modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp)
+                            )
                             LazyColumn(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -307,7 +289,7 @@ fun SearchTab(
                             ) {
                                 items(cities) { cityItem ->
                                     Text(
-                                        text = cityItem.displayName,
+                                        text = CityLocalization.displayName(cityItem.key),
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .clickable {
@@ -321,7 +303,9 @@ fun SearchTab(
                         }
                     }
 
-                    val coverageOptions = citiesByCountry[selectedCountryKey] ?: emptyList()
+                    val coverageOptions = remember(citiesByCountry, selectedCountryKey) {
+                        (citiesByCountry[selectedCountryKey] ?: emptyList()).map { LocationItem(it, it) }
+                    }
 
                     FilterChip(
                         selected = selectedCoverageKeys.isNotEmpty(),
@@ -350,9 +334,19 @@ fun SearchTab(
                             mutableStateOf(selectedCoverageKeys)
                         }
 
+                        val coverageSheetState = rememberModalBottomSheetState(
+                            skipPartiallyExpanded = true
+                        )
+
                         ModalBottomSheet(
-                            onDismissRequest = { showCoverageSheet = false }
+                            onDismissRequest = { showCoverageSheet = false },
+                            sheetState = coverageSheetState
                         ) {
+                            Text(
+                                text = stringResource(R.string.coverage_title),
+                                style = MaterialTheme.typography.titleMedium,
+                                modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp)
+                            )
                             LazyColumn(
                                 modifier = Modifier.fillMaxWidth()
                             ) {
@@ -377,21 +371,28 @@ fun SearchTab(
                                             onCheckedChange = null
                                         )
                                         Spacer(Modifier.width(12.dp))
-                                        Text(text = coverageItem.displayName)
+                                        Text(text = CityLocalization.displayName(coverageItem.key))
                                     }
                                 }
                             }
 
-                            Button(
-                                onClick = {
-                                    onCoverageSelected(draftCoverage)
-                                    showCoverageSheet = false
-                                },
+                            Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(horizontal = 24.dp, vertical = 16.dp)
+                                    .padding(horizontal = 24.dp, vertical = 16.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Text(stringResource(R.string.apply))
+                                TextButton(onClick = { draftCoverage = emptySet() }) {
+                                    Text(stringResource(R.string.clear))
+                                }
+                                Button(
+                                    onClick = {
+                                        onCoverageSelected(draftCoverage)
+                                        showCoverageSheet = false
+                                    }
+                                ) {
+                                    Text(stringResource(R.string.apply))
+                                }
                             }
                         }
                     }
@@ -435,6 +436,11 @@ fun SearchTab(
                         onDismissRequest = { showCategorySheet = false },
                         sheetState = categorySheetState
                     ) {
+                        Text(
+                            text = stringResource(R.string.categories_title),
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp)
+                        )
                         LazyColumn(modifier = Modifier.fillMaxWidth()) {
                             items(categoryOptions) { categoryItem ->
                                 val isChecked = categoryItem.key in draftCategory
@@ -458,16 +464,24 @@ fun SearchTab(
                                 }
                             }
                         }
-                        Button(
-                            onClick = {
-                                onCategorySelected(draftCategory)
-                                showCategorySheet = false
-                            },
+
+                        Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 24.dp, vertical = 16.dp)
+                                .padding(horizontal = 24.dp, vertical = 16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text(stringResource(R.string.apply))
+                            TextButton(onClick = { draftCategory = emptySet() }) {
+                                Text(stringResource(R.string.clear))
+                            }
+                            Button(
+                                onClick = {
+                                    onCategorySelected(draftCategory)
+                                    showCategorySheet = false
+                                }
+                            ) {
+                                Text(stringResource(R.string.apply))
+                            }
                         }
                     }
                 }
@@ -505,7 +519,8 @@ fun SearchTab(
                 val categoryDisplayNames = rememberCategoryDisplayNames()
 
                 LazyColumn(
-                    modifier = Modifier.padding(horizontal = 8.dp)
+                    modifier = Modifier.padding(horizontal = 8.dp),
+                    contentPadding = PaddingValues(bottom = if (hasMiniPlayer) 88.dp else 0.dp)
                 ) {
                     items(
                         filteredStations,
@@ -523,6 +538,7 @@ fun SearchTab(
                             ps = station.ps ?: "",
                             rt = station.rt ?: "",
                             hasIssues = station.hasIssues ?: false,
+                            stream = station.stream,
                             isFavourite = favourites.any { it.id == station.id },
                             onFavouriteClick = { onFavouriteClick(station) },
                             onListenClick = { onListenClick(station) }
