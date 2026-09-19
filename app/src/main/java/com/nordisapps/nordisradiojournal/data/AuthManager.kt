@@ -12,11 +12,13 @@ val Context.authDataStore by preferencesDataStore(name = "auth")
 object AuthManager {
     private val USERNAME_KEY = stringPreferencesKey("username")
     private val PHOTO_KEY = stringPreferencesKey("photo")
+    private val EMAIL_KEY = stringPreferencesKey("email")
 
-    suspend fun saveUser(context: Context, username: String?, photo: String?) {
+    suspend fun saveUser(context: Context, username: String?, photo: String?, email: String?) {
         context.authDataStore.edit { prefs ->
             prefs[USERNAME_KEY] = username ?: ""
             prefs[PHOTO_KEY] = photo ?: ""
+            prefs[EMAIL_KEY] = email ?: ""
         }
     }
 
@@ -24,7 +26,8 @@ object AuthManager {
         return context.authDataStore.data.map { prefs ->
             UserData(
                 username = prefs[USERNAME_KEY] ?: "",
-                photoUrl = prefs[PHOTO_KEY] ?: ""
+                photoUrl = prefs[PHOTO_KEY] ?: "",
+                email = prefs[EMAIL_KEY] ?: ""
             )
         }
     }
@@ -36,5 +39,6 @@ object AuthManager {
 
 data class UserData(
     val username: String,
-    val photoUrl: String
+    val photoUrl: String,
+    val email: String
 )

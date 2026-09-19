@@ -103,6 +103,9 @@ class MainActivity : ComponentActivity() {
     private val _userName = mutableStateOf<String?>(null)
     val userName: String? get() = _userName.value
 
+    private val _userEmail = mutableStateOf<String?>(null)
+    val userEmail: String? get() = _userEmail.value
+
     private var initialTab by mutableIntStateOf(0)
 
     private val signInLauncher = registerForActivityResult(
@@ -202,6 +205,7 @@ class MainActivity : ComponentActivity() {
                         playerViewModel = playerViewModel,
                         userPhotoUrl = userPhotoUrl,
                         userName = userName,
+                        userEmail = userEmail,
                         onSignInClick = { startSignIn() },
                         onSignOutClick = { signOut() },
                         onLanguageChange = { lang ->
@@ -239,9 +243,11 @@ class MainActivity : ComponentActivity() {
                 if (user.username.isNotEmpty()) {
                     _userPhotoUrl.value = user.photoUrl
                     _userName.value = user.username
+                    _userEmail.value = user.email.ifBlank { null }
                 } else {
                     _userPhotoUrl.value = null
                     _userName.value = null
+                    _userEmail.value = null
                 }
             }
         }
@@ -257,6 +263,7 @@ class MainActivity : ComponentActivity() {
         FirebaseAuth.getInstance().signInWithCredential(firebaseCredential)
             .addOnSuccessListener { authResult ->
                 val user = authResult.user
+                val userEmail = user?.email
 
                 Log.d("AUTH", "✅ Firebase SignIn SUCCESS!")
                 Log.d("AUTH", "User ID: ${user?.uid}")
@@ -267,7 +274,8 @@ class MainActivity : ComponentActivity() {
                     AuthManager.saveUser(
                         context = this@MainActivity,
                         username = userName,
-                        photo = photoUrl
+                        photo = photoUrl,
+                        email = userEmail
                     )
 
                     Toast.makeText(
