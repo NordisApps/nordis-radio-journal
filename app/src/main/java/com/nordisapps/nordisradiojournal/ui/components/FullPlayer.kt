@@ -3,7 +3,6 @@
 package com.nordisapps.nordisradiojournal.ui.components
 
 import android.annotation.SuppressLint
-import android.widget.Toast
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -70,6 +69,7 @@ fun FullPlayer(
     var showSleepTimerDialog by remember { mutableStateOf(false) }
     var selectedMinutes by remember { mutableStateOf<String?>(null) }
     var activeMinutes by remember { mutableStateOf<String?>(null) }
+    val snackbarHostState = remember { SnackbarHostState() }
     val timerOffLabel = stringResource(R.string.timer_off)
     val timerCancelledLabel = stringResource(R.string.timer_cancelled)
     val quality = when (currentBitrate ?: 0) {
@@ -270,6 +270,12 @@ fun FullPlayer(
                         }
                     }
                 }
+                SnackbarHost(
+                    hostState = snackbarHostState,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 16.dp)
+                )
             }
         }
     }
@@ -310,7 +316,9 @@ fun FullPlayer(
                     } else {
                         context.getString(R.string.timer_set, activeMinutes)
                     }
-                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                    coroutineScope.launch {
+                        snackbarHostState.showSnackbar(message)
+                    }
                 }) {
                     Text("OK")
                 }
