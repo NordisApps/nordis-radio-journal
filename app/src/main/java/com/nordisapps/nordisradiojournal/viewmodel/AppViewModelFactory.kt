@@ -3,6 +3,7 @@ package com.nordisapps.nordisradiojournal.viewmodel
 import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import com.nordisapps.nordisradiojournal.data.LanguageManager
 
 class AppViewModelFactory(
     private val application: Application,
@@ -38,7 +39,11 @@ class AppViewModelFactory(
                 onUserLoggedIn = { uid -> favouritesViewModel?.mergeFavouritesOnLogin(uid) },
                 onGuestSession = { favouritesViewModel?.loadFavourites() }
             ) as T
-            AnnouncementsViewModel::class.java -> AnnouncementsViewModel(application, shared) as T
+            AnnouncementsViewModel::class.java -> AnnouncementsViewModel(
+                application,
+                shared,
+                getCurrentLanguage = { LanguageManager.getLanguage(application) }
+            ) as T
             else -> super.create(modelClass)
         }
     }

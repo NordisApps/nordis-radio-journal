@@ -20,5 +20,6 @@ data class UiState(
     val adminState: AdminState = AdminState.Unknown,
     val isUserLoggedIn: Boolean = false,
     val activeTimerMinutes: String? = null,
-    val endTimerTime: String? = null
+    val endTimerTime: String? = null,
+    val announcements: List<Announcement> = emptyList()
 )

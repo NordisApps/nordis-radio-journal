@@ -6,6 +6,7 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.Lifecycle
 import androidx.media3.common.util.UnstableApi
@@ -18,6 +19,7 @@ import androidx.navigation.navArgument
 import com.nordisapps.nordisradiojournal.ui.settings.SettingsMenu
 import com.nordisapps.nordisradiojournal.data.model.UiState
 import com.nordisapps.nordisradiojournal.tools.AdminPanelScreen
+import com.nordisapps.nordisradiojournal.tools.EditAnnouncementScreen
 import com.nordisapps.nordisradiojournal.tools.EditStationScreen
 import com.nordisapps.nordisradiojournal.ui.settings.AboutScreen
 import com.nordisapps.nordisradiojournal.ui.settings.PlayerSettingsScreen
@@ -111,6 +113,9 @@ fun AppNavigation(
             PlayerSettingsScreen()
         }
         composable("admin_panel") {
+            LaunchedEffect(Unit) {
+                announcementsViewModel.loadAllAnnouncementsForAdmin()
+            }
             AdminPanelScreen(
                 uiState = uiState,
                 onDeleteStationClicked = { station ->
@@ -139,6 +144,29 @@ fun AppNavigation(
                 onEditStationClicked = { station ->
                     navController.navigateSingleTop("edit_station_screen?stationId=${station.id}&nextDisplayId=null")
                 },
+                onAddAnnouncementClicked = {
+                    navController.navigateSingleTop("edit_announcement_screen?announcementId=null")
+                },
+                onEditAnnouncementClicked = { announcement ->
+                    navController.navigateSingleTop("edit_announcement_screen?announcementId=${announcement.id}")
+                },
+                onDeleteAnnouncementClicked = { announcement ->
+                    announcementsViewModel.deleteAnnouncement(
+                        announcement = announcement,
+                        onSuccess = {
+                            Toast.makeText(
+                                context, "Анонс \"${announcement.title}\" удалён",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        },
+                        onFailure = { error ->
+                            Toast.makeText(
+                                context,
+                                "Ошибка удаления: ${error.message}",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                    )
                 }
             )
         }
@@ -184,6 +212,43 @@ fun AppNavigation(
                 }
             )
         }
+        composable(
+            route = "edit_announcement_screen?announcementId={announcementId}",
+            arguments = listOf(
+                navArgument("announcementId") {
+                    type = NavType.StringType
+                    nullable = true
+                }
+            )
+        ) { backStackEntry ->
+            val announcementId = backStackEntry.arguments?.getString("announcementId")
+            EditAnnouncementScreen(
+                announcementId = announcementId,
+                uiState = uiState,
+                onSaveAnnouncement = { announcementToSave ->
+                    announcementsViewModel.saveAnnouncement(
+                        announcement = announcementToSave,
+                        onSuccess = {
+                            navController.popBackStack()
+                            Toast.makeText(
+                                context,
+                                "Анонс сохранён!",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        },
+                        onFailure = { error ->
+                            Toast.makeText(
+                                context,
+                                "Ошибка сохранения: ${error.message}",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                    )
+                }
+            )
+        }
+    }
+}
 
 fun NavController.navigateSingleTop(route: String) {
     if (currentBackStackEntry?.lifecycle?.currentState == Lifecycle.State.RESUMED) {
