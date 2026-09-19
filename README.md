@@ -14,14 +14,24 @@ and browsing a curated catalog of European radio stations.
 - European radio stations catalog
 - Favorites
 - Search with filters (Country, City, Coverage, Category)
-- Listening history
+- Listening history (Recently Played, on the Home screen)
+- Account tab (sign in/out, profile info)
+- In-app News Hub (announcements, features, fixes)
 - Player settings (network speed indicator, ICY metadata toggle)
+- Sleep timer
+
+## 🌍 Station Coverage
+Currently, covers Romania only:
+- Constanța — complete
+- Brașov — partially covered (~50%)
+
+More stations and countries will be added over time.
 
 ## 🛠️ Tech Stack
 - Kotlin
 - Jetpack Compose
 - Media3 / ExoPlayer
-- Firebase Realtime Database, Firestore, Auth
+- Firebase Realtime Database, Firestore, Auth, App Check
 
 ## 📱 Supported Android Versions
 - Minimum: Android 8.0 (API 26)
@@ -32,8 +42,11 @@ and browsing a curated catalog of European radio stations.
 - ✔️ Coverage filter (multi-select)
 - ✔️ Category filter (multi-select)
 - ✔️ Player settings screen
+- ✔️ Account tab
+- ✔️ News Hub / Announcements
 - Station of the Day
-- Voice search
+- Multi-screen / large-screen support (tablets, foldables)
+- ~~Voice search~~ - dropped from the roadmap for now
 
 ## ⚠️ Note
 This app works with online streams only.
