@@ -45,7 +45,14 @@ fun AppNavigation(
     onLanguageChange: (String) -> Unit,
     currentTheme: ThemeMode,
     onThemeChange: (ThemeMode) -> Unit,
-    context: Context
+    context: Context,
+    userPhotoUrl: String?,
+    userName: String?,
+    userEmail: String?,
+    isAdmin: Boolean,
+    onSignInClick: () -> Unit,
+    onSignOutClick: () -> Unit,
+    onAdminPanelClick: () -> Unit
 ) {
     NavHost(
         navController = navController,
@@ -73,7 +80,14 @@ fun AppNavigation(
                 announcementsViewModel = announcementsViewModel,
                 factsViewModel = factsViewModel,
                 selectedTab = selectedTab,
-                currentLanguage = currentLanguage
+                currentLanguage = currentLanguage,
+                userPhotoUrl = userPhotoUrl,
+                userName = userName,
+                userEmail = userEmail,
+                onSignInClick = onSignInClick,
+                onSignOutClick = onSignOutClick,
+                isAdmin = isAdmin,
+                onAdminPanelClick = onAdminPanelClick
             )
         }
         composable("settings") {

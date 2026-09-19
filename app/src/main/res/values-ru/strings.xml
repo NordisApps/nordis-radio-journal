@@ -81,4 +81,6 @@
     <string name="player_setting_show_speed_desc">Отображать индикатор стабильности соединения при прослушивании</string>
     <string name="player_setting_icy_metadata">ICY-метаданные</string>
     <string name="player_setting_icy_metadata_desc">Показывать название трека из потока станции</string>
+    <string name="nav_account">Аккаунт</string>
+    <string name="not_signed_in">Вы не авторизованы</string>
 </resources>

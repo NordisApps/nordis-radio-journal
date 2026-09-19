@@ -81,5 +81,6 @@
     <string name="player_setting_show_speed_desc">Afișează indicatorul de stabilitate a conexiunii în timpul ascultării</string>
     <string name="player_setting_icy_metadata">Metadate ICY</string>
     <string name="player_setting_icy_metadata_desc">Afișează titlul piesei din fluxul stației</string>
-
+    <string name="nav_account">Cont</string>
+    <string name="not_signed_in">Neautentificat</string>
 </resources>

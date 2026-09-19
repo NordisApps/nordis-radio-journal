@@ -8,6 +8,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.media3.common.util.UnstableApi
+import com.nordisapps.nordisradiojournal.ui.home.AccountTab
 import com.nordisapps.nordisradiojournal.ui.home.FavoritesTab
 import com.nordisapps.nordisradiojournal.ui.home.HomeTab
 import com.nordisapps.nordisradiojournal.ui.home.ListenTab
@@ -30,7 +31,14 @@ fun MainScreen(
     announcementsViewModel: AnnouncementsViewModel,
     factsViewModel: RadioFactsViewModel,
     currentLanguage: String,
-    selectedTab: Int
+    selectedTab: Int,
+    userPhotoUrl: String?,
+    userName: String?,
+    userEmail: String?,
+    isAdmin: Boolean,
+    onSignInClick: () -> Unit,
+    onSignOutClick: () -> Unit,
+    onAdminPanelClick: () -> Unit
 ) {
     val filters by stationsViewModel.filters.collectAsState()
     val filteredStations by stationsViewModel.filteredStations.collectAsState()
@@ -81,13 +89,17 @@ fun MainScreen(
                 )
             }
 
-            3 -> {
-                ListenTab(
-                    recentlyPlayed = uiState.recentlyPlayedStations,
-                    onStationClick = { station ->
-                        playerViewModel.playStation(station) { recentlyPlayedViewModel.addStationToHistory(it) }
-                    }
-                )
+                3 -> {
+                    AccountTab(
+                        userPhotoUrl = userPhotoUrl,
+                        userName = userName,
+                        userEmail = userEmail,
+                        isAdmin = isAdmin,
+                        onSignInClick = onSignInClick,
+                        onSignOutClick = onSignOutClick,
+                        onAdminPanelClick = onAdminPanelClick
+                    )
+                }
             }
         }
     }

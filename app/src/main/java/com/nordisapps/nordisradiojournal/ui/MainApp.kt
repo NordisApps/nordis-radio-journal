@@ -10,25 +10,17 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.AdminPanelSettings
-import androidx.compose.material.icons.filled.Headphones
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.outlined.Headphones
+import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.StarBorder
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -37,7 +29,6 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -49,18 +40,15 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import coil.compose.AsyncImage
 import com.nordisapps.nordisradiojournal.R
 import com.nordisapps.nordisradiojournal.data.model.AdminState
+import com.nordisapps.nordisradiojournal.data.model.AnnouncementType
 import com.nordisapps.nordisradiojournal.ui.components.FullPlayer
 import com.nordisapps.nordisradiojournal.ui.components.MiniPlayer
 import com.nordisapps.nordisradiojournal.ui.home.SnowOverlay
@@ -85,6 +73,7 @@ fun MainApp(
     announcementsViewModel: AnnouncementsViewModel,
     userPhotoUrl: String?,
     userName: String?,
+    userEmail: String?,
     onSignInClick: () -> Unit,
     onSignOutClick: () -> Unit,
     onLanguageChange: (String) -> Unit,
@@ -96,8 +85,6 @@ fun MainApp(
 ) {
     val context = LocalContext.current
     val navController = rememberNavController()
-    var showUserMenu by remember { mutableStateOf(false) }
-    var showSignOutDialog by remember { mutableStateOf(false) }
     var showFullPlayer by remember { mutableStateOf(false) }
     var selectedTab by rememberSaveable(initialTab) { mutableIntStateOf(initialTab) }
     val uiState by stationsViewModel.uiStateFlow.collectAsState()
@@ -161,85 +148,12 @@ fun MainApp(
 
                             if (route?.startsWith("edit_station_screen") != true) {
                                 IconButton(onClick = {
-                                    navController.navigate("settings") {
-                                        launchSingleTop = true
-                                    }
+                                    navController.navigateSingleTop("settings")
                                 }) {
                                     Icon(
                                         Icons.Default.Settings,
                                         contentDescription = "Настройки"
                                     )
-                                }
-
-                                Box {
-                                    if (userPhotoUrl == null) {
-                                        IconButton(onClick = onSignInClick) {
-                                            Icon(
-                                                Icons.Default.AccountCircle,
-                                                contentDescription = "Войти"
-                                            )
-                                        }
-                                    } else {
-                                        IconButton(onClick = { showUserMenu = true }) {
-                                            AsyncImage(
-                                                model = userPhotoUrl,
-                                                contentDescription = stringResource(R.string.profile),
-                                                contentScale = ContentScale.Crop,
-                                                modifier = Modifier
-                                                    .size(32.dp)
-                                                    .clip(CircleShape)
-                                            )
-                                        }
-                                        DropdownMenu(
-                                            expanded = showUserMenu,
-                                            onDismissRequest = { showUserMenu = false }
-                                        ) {
-                                            userName?.let {
-                                                DropdownMenuItem(
-                                                    text = { Text(it) },
-                                                    onClick = {},
-                                                    leadingIcon = {
-                                                        Icon(
-                                                            Icons.Default.AccountCircle,
-                                                            contentDescription = null
-                                                        )
-                                                    },
-                                                    enabled = false
-                                                )
-                                                HorizontalDivider()
-                                            }
-                                            if (uiState.adminState is AdminState.Admin) {
-                                                DropdownMenuItem(
-                                                    text = { Text(stringResource(R.string.admin_button)) },
-                                                    onClick = {
-                                                        navController.navigate("admin_panel") {
-                                                            launchSingleTop = true
-                                                        }
-                                                        showUserMenu = false
-                                                    },
-                                                    leadingIcon = {
-                                                        Icon(
-                                                            Icons.Default.AdminPanelSettings,
-                                                            contentDescription = null
-                                                        )
-                                                    }
-                                                )
-                                            }
-                                            DropdownMenuItem(
-                                                text = { Text(stringResource(R.string.sign_out)) },
-                                                onClick = {
-                                                    showSignOutDialog = true
-                                                    showUserMenu = false
-                                                },
-                                                leadingIcon = {
-                                                    Icon(
-                                                        Icons.AutoMirrored.Filled.ExitToApp,
-                                                        contentDescription = null
-                                                    )
-                                                }
-                                            )
-                                        }
-                                    }
                                 }
                             }
                         }
@@ -255,13 +169,13 @@ fun MainApp(
                             R.string.nav_home,
                             R.string.nav_search,
                             R.string.nav_favorites,
-                            R.string.nav_listen
+                            R.string.nav_account
                         )
                         val tabIcons = listOf(
                             Icons.Filled.Home to Icons.Outlined.Home,
                             Icons.Filled.Search to Icons.Outlined.Search,
                             Icons.Filled.Star to Icons.Outlined.StarBorder,
-                            Icons.Filled.Headphones to Icons.Outlined.Headphones
+                            Icons.Filled.AccountCircle to Icons.Outlined.AccountCircle
                         )
                         tabLabels.forEachIndexed { index, labelRes ->
                             val (filledIcon, outlinedIcon) = tabIcons[index]
@@ -276,10 +190,6 @@ fun MainApp(
                                 selected = selectedTab == index,
                                 onClick = {
                                     selectedTab = index
-                                    navController.navigate("home") {
-                                        launchSingleTop = true
-                                        popUpTo("home") { inclusive = false }
-                                    }
                                 }
                             )
                         }
@@ -307,7 +217,16 @@ fun MainApp(
                     onLanguageChange = onLanguageChange,
                     currentTheme = currentTheme,
                     onThemeChange = onThemeChange,
-                    context = context
+                    context = context,
+                    userPhotoUrl = userPhotoUrl,
+                    userName = userName,
+                    userEmail = userEmail,
+                    isAdmin = uiState.adminState is AdminState.Admin,
+                    onSignInClick = onSignInClick,
+                    onSignOutClick = onSignOutClick,
+                    onAdminPanelClick = {
+                        navController.navigateSingleTop("admin_panel")
+                    }
                 )
 
                 if (navController.currentBackStackEntryAsState().value?.destination?.route == "home") {
@@ -349,27 +268,6 @@ fun MainApp(
         SnowOverlay(
             enabled = announcementsViewModel.isChristmas.value && !showFullPlayer,
             snowCount = 90
-        )
-    }
-
-    if (showSignOutDialog) {
-        AlertDialog(
-            onDismissRequest = { showSignOutDialog = false },
-            title = { Text(stringResource(R.string.sign_out_dialog_title)) },
-            text = { Text(stringResource(R.string.sign_out_dialog_text)) },
-            confirmButton = {
-                TextButton(onClick = {
-                    showSignOutDialog = false
-                    onSignOutClick()
-                }) {
-                    Text(stringResource(R.string.sign_out_dialog_confirm))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showSignOutDialog = false }) {
-                    Text(stringResource(R.string.cancel))
-                }
-            }
         )
     }
 }
