@@ -298,6 +298,7 @@ class MainActivity : ComponentActivity() {
     private fun signOut() {
         lifecycleScope.launch {
             try {
+                FirebaseAuth.getInstance().signOut()
                 AuthManager.clearUser(this@MainActivity)
                 googleSignInClient.signOut()
                 Toast.makeText(
