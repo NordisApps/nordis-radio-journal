@@ -7,7 +7,9 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.Lifecycle
 import androidx.media3.common.util.UnstableApi
+import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -98,8 +100,8 @@ fun AppNavigation(
                 },
                 currentTheme = currentTheme,
                 onThemeChange = onThemeChange,
-                onAboutClick = { navController.navigate("about") },
-                onPlayerSettingsClick = { navController.navigate("player_settings") }
+                onAboutClick = { navController.navigateSingleTop("about") },
+                onPlayerSettingsClick = { navController.navigateSingleTop("player_settings") }
             )
         }
         composable("about") {
@@ -132,10 +134,11 @@ fun AppNavigation(
                 onAddStationClicked = {
                     val nextId = (uiState.stations.maxOfOrNull { it.displayId ?: 0 }
                         ?: 0) + 1
-                    navController.navigate("edit_station_screen?nextDisplayId=$nextId")
+                    navController.navigateSingleTop("edit_station_screen?nextDisplayId=$nextId")
                 },
                 onEditStationClicked = { station ->
-                    navController.navigate("edit_station_screen?stationId=${station.id}&nextDisplayId=null")
+                    navController.navigateSingleTop("edit_station_screen?stationId=${station.id}&nextDisplayId=null")
+                },
                 }
             )
         }
@@ -180,6 +183,12 @@ fun AppNavigation(
                     )
                 }
             )
+        }
+
+fun NavController.navigateSingleTop(route: String) {
+    if (currentBackStackEntry?.lifecycle?.currentState == Lifecycle.State.RESUMED) {
+        navigate(route) {
+            launchSingleTop = true
         }
     }
 }
