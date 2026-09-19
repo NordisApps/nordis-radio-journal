@@ -74,6 +74,7 @@ fun FavoritesTab(
                     ps = station.ps ?: "",
                     rt = station.rt ?: "",
                     hasIssues = station.hasIssues ?: false,
+                    stream = station.stream,
                     isFavourite = true,
                     onFavouriteClick = { onFavouriteClick(station) },
                     onListenClick = { onStationClick(station) }

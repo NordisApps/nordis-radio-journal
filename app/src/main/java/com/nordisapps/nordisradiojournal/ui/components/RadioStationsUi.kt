@@ -56,6 +56,7 @@ fun RadioStationItem(
     ps: String?,
     rt: String?,
     hasIssues: Boolean?,
+    stream: String?,
     isFavourite: Boolean,
     onFavouriteClick: () -> Unit,
     onListenClick: () -> Unit
@@ -67,6 +68,7 @@ fun RadioStationItem(
     val bringIntoViewRequester = remember { BringIntoViewRequester() }
     val scope = rememberCoroutineScope()
     val rotation by animateFloatAsState(if (expanded) 180f else 0f)
+    val hasOnlineStream = !stream.isNullOrBlank() && stream != "-"
     val showCoverageBadge = coverage?.any {
         !it.equals(mainCity, ignoreCase = true)
     } == true
@@ -216,12 +218,25 @@ fun RadioStationItem(
 
                     Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
                         if (showCoverageBadge) {
-                            Text("${stringResource(R.string.station_coverage)}: ${coverage.joinToString(", ")}")
+                            Text(
+                                "${stringResource(R.string.station_coverage)}: ${
+                                    coverage.joinToString(
+                                        ", "
+                                    )
+                                }"
+                            )
                         }
                         Text("${stringResource(R.string.station_location)}: ${location ?: "-"}")
                         if (!category.isNullOrEmpty()) {
-                            val displayCategories = category.map { key -> categoryDisplayNames[key] ?: key }
-                            Text("${stringResource(R.string.category)}: ${displayCategories.joinToString(", ")}")
+                            val displayCategories =
+                                category.map { key -> categoryDisplayNames[key] ?: key }
+                            Text(
+                                "${stringResource(R.string.category)}: ${
+                                    displayCategories.joinToString(
+                                        ", "
+                                    )
+                                }"
+                            )
                         }
                         Text("PS: ${ps ?: "-"}")
                         Text("RT: ${rt ?: "-"}")
@@ -275,21 +290,23 @@ fun RadioStationItem(
                             )
                         }
 
-                        Button(
-                            onClick = { onListenClick() },
-                            modifier = Modifier.align(Alignment.Center)
-                        )
-                        {
-                            Icon(
-                                imageVector = Icons.Default.PlayArrow,
-                                contentDescription = null,
-                                modifier = Modifier.size(ButtonDefaults.IconSize)
+                        if (hasOnlineStream) {
+                            Button(
+                                onClick = { onListenClick() },
+                                modifier = Modifier.align(Alignment.Center)
                             )
-                            Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                            Text(
-                                text = stringResource(R.string.btn_listen_online),
-                                style = MaterialTheme.typography.labelLarge
-                            )
+                            {
+                                Icon(
+                                    imageVector = Icons.Default.PlayArrow,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(ButtonDefaults.IconSize)
+                                )
+                                Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                                Text(
+                                    text = stringResource(R.string.btn_listen_online),
+                                    style = MaterialTheme.typography.labelLarge
+                                )
+                            }
                         }
                     }
                 }
