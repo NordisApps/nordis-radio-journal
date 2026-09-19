@@ -10,14 +10,19 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.media3.common.util.UnstableApi
+import com.nordisapps.nordisradiojournal.data.model.Announcement
 import com.nordisapps.nordisradiojournal.ui.home.AccountTab
+import com.nordisapps.nordisradiojournal.ui.home.AnnouncementDetailSheet
 import com.nordisapps.nordisradiojournal.ui.home.FavoritesTab
 import com.nordisapps.nordisradiojournal.ui.home.HomeTab
-import com.nordisapps.nordisradiojournal.ui.home.ListenTab
 import com.nordisapps.nordisradiojournal.ui.home.SearchTab
 import com.nordisapps.nordisradiojournal.viewmodel.AnnouncementsViewModel
 import com.nordisapps.nordisradiojournal.viewmodel.FavouritesViewModel
@@ -49,8 +54,14 @@ fun MainScreen(
     val filters by stationsViewModel.filters.collectAsState()
     val filteredStations by stationsViewModel.filteredStations.collectAsState()
     val uiState by stationsViewModel.uiStateFlow.collectAsState()
+    val playerState by playerViewModel.uiStateFlow.collectAsState()
     val favourites = uiState.favouriteStations
     val facts = factsViewModel.facts.collectAsState().value
+    var selectedAnnouncement by remember { mutableStateOf<Announcement?>(null) }
+
+    LaunchedEffect(currentLanguage) {
+        announcementsViewModel.translateAnnouncements(currentLanguage)
+    }
 
     Column(modifier = Modifier.fillMaxSize()) {
         AnimatedContent(
@@ -81,36 +92,42 @@ fun MainScreen(
                     )
                 }
 
-            1 -> {
-                SearchTab(
-                    searchQuery = filters.query,
-                    selectedCountryKey = filters.country,
-                    selectedCityKey = filters.city,
-                    selectedCoverageKeys = filters.coverage,
-                    selectedCategoryKeys = filters.category,
-                    filteredStations = filteredStations,
-                    favourites = favourites,
-                    onSearchQueryChange = { stationsViewModel.setSearchQuery(it) },
-                    onCountrySelected = { stationsViewModel.setSelectedCountry(it) },
-                    onCitySelected = { stationsViewModel.setSelectedCity(it) },
-                    onCoverageSelected = { stationsViewModel.setSelectedCoverage(it) },
-                    onFavouriteClick = { favouritesViewModel.toggleFavourite(it) },
-                    onListenClick = { station ->
-                        playerViewModel.playStation(station) { recentlyPlayedViewModel.addStationToHistory(it) }
-                    },
-                    onCategorySelected = { stationsViewModel.setSelectedCategory(it) }
-                )
-            }
+                1 -> {
+                    val availableCountries by stationsViewModel.availableCountries.collectAsState()
+                    val citiesByCountry by stationsViewModel.citiesByCountry.collectAsState()
 
-            2 -> {
-                FavoritesTab(
-                    favourites = favourites,
-                    onFavouriteClick = { favouritesViewModel.toggleFavourite(it) },
-                    onStationClick = { station ->
-                        playerViewModel.playStation(station) { recentlyPlayedViewModel.addStationToHistory(it) }
-                    }
-                )
-            }
+                    SearchTab(
+                        searchQuery = filters.query,
+                        selectedCountryKey = filters.country,
+                        selectedCityKey = filters.city,
+                        selectedCoverageKeys = filters.coverage,
+                        selectedCategoryKeys = filters.category,
+                        availableCountries = availableCountries,
+                        citiesByCountry = citiesByCountry,
+                        filteredStations = filteredStations,
+                        favourites = favourites,
+                        onSearchQueryChange = { stationsViewModel.setSearchQuery(it) },
+                        onCountrySelected = { stationsViewModel.setSelectedCountry(it) },
+                        onCitySelected = { stationsViewModel.setSelectedCity(it) },
+                        onCoverageSelected = { stationsViewModel.setSelectedCoverage(it) },
+                        onFavouriteClick = { favouritesViewModel.toggleFavourite(it) },
+                        onListenClick = { station ->
+                            playerViewModel.playStation(station) { recentlyPlayedViewModel.addStationToHistory(it) }
+                        },
+                        onCategorySelected = { stationsViewModel.setSelectedCategory(it) },
+                        hasMiniPlayer = playerState.currentStation != null
+                    )
+                }
+
+                2 -> {
+                    FavoritesTab(
+                        favourites = favourites,
+                        onFavouriteClick = { favouritesViewModel.toggleFavourite(it) },
+                        onStationClick = { station ->
+                            playerViewModel.playStation(station) { recentlyPlayedViewModel.addStationToHistory(it) }
+                        }
+                    )
+                }
 
                 3 -> {
                     AccountTab(
@@ -125,5 +142,14 @@ fun MainScreen(
                 }
             }
         }
+    }
+
+    selectedAnnouncement?.let { announcement ->
+        AnnouncementDetailSheet(
+            emoji = announcement.emoji,
+            title = announcement.title,
+            description = announcement.description,
+            onDismiss = { selectedAnnouncement = null }
+        )
     }
 }

@@ -89,6 +89,8 @@ fun MainApp(
     var selectedTab by rememberSaveable(initialTab) { mutableIntStateOf(initialTab) }
     val uiState by stationsViewModel.uiStateFlow.collectAsState()
     val playerState by playerViewModel.uiStateFlow.collectAsState()
+    val hasChristmasAnnouncement = announcementsViewModel.announcements
+        .any { it.typeEnum == AnnouncementType.CHRISTMAS }
 
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -116,11 +118,18 @@ fun MainApp(
                                                         ?.getString("stationId")
                                                 if (stationId == null) "Новая станция" else "Редактирование"
                                             }
+                                            route?.startsWith("edit_announcement_screen") == true -> {
+                                                val announcementId =
+                                                    navController.currentBackStackEntry
+                                                        ?.arguments
+                                                        ?.getString("announcementId")
+                                                if (announcementId == null) "Новый анонс" else "Редактирование анонса"
+                                            }
 
                                             else -> stringResource(R.string.app_name)
                                         }
                                     )
-                                    if (announcementsViewModel.isChristmas.value) {
+                                    if (hasChristmasAnnouncement) {
                                         append(" 🎄")
                                     }
                                 }
@@ -132,7 +141,7 @@ fun MainApp(
                             when {
                                 route == "settings" || route == "player_settings" || route == "admin_panel" || route == "about" || route?.startsWith(
                                     "edit_station_screen"
-                                ) == true -> {
+                                ) == true || route?.startsWith("edit_announcement_screen") == true -> {
                                     IconButton(onClick = { navController.popBackStack() }) {
                                         Icon(
                                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -146,7 +155,7 @@ fun MainApp(
                             val route =
                                 navController.currentBackStackEntryAsState().value?.destination?.route
 
-                            if (route?.startsWith("edit_station_screen") != true) {
+                            if (route?.startsWith("edit_station_screen") != true && route?.startsWith("edit_announcement_screen") != true) {
                                 IconButton(onClick = {
                                     navController.navigateSingleTop("settings")
                                 }) {
@@ -266,7 +275,7 @@ fun MainApp(
             }
         }
         SnowOverlay(
-            enabled = announcementsViewModel.isChristmas.value && !showFullPlayer,
+            enabled = hasChristmasAnnouncement && !showFullPlayer,
             snowCount = 90
         )
     }
