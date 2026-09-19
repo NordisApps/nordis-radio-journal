@@ -33,4 +33,4 @@ This agreement may be updated at any time. Continued use of the app
 constitutes acceptance of the updated terms.
 
 ## 8. Contact
-For questions: github.com/ROSTYSLAV4IK22 or E-Mail rostikyacenko2@gmail.com
+For questions: github.com/NordisApps or E-Mail rostikyacenko2@gmail.com
