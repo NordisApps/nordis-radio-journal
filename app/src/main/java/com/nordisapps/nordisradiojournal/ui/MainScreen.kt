@@ -1,5 +1,11 @@
 package com.nordisapps.nordisradiojournal.ui
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -47,16 +53,33 @@ fun MainScreen(
     val facts = factsViewModel.facts.collectAsState().value
 
     Column(modifier = Modifier.fillMaxSize()) {
-        when (selectedTab) {
-            0 -> {
-                HomeTab(
-                    isLoading = uiState.isLoading,
-                    facts = facts,
-                    christmasDeco = announcementsViewModel.christmasDeco,
-                    onFactsLoad = { factsViewModel.loadFacts() },
-                    currentLanguage = currentLanguage
-                )
-            }
+        AnimatedContent(
+            targetState = selectedTab,
+            transitionSpec = {
+                (fadeIn(animationSpec = tween(200)) + slideInVertically(
+                    animationSpec = tween(200),
+                    initialOffsetY = { it / 8}
+                )) togetherWith
+                        fadeOut(animationSpec = tween(150))
+            },
+            label = "tab_transition"
+        ) { tab ->
+            when (tab) {
+                0 -> {
+                    HomeTab(
+                        isLoading = uiState.isLoading,
+                        facts = facts,
+                        announcements = announcementsViewModel.announcements,
+                        isTranslating = announcementsViewModel.isTranslating,
+                        onFactsLoad = { factsViewModel.loadFacts() },
+                        onAnnouncementClick = { selectedAnnouncement = it },
+                        currentLanguage = currentLanguage,
+                        recentlyPlayed = uiState.recentlyPlayedStations,
+                        onStationClick = { station ->
+                            playerViewModel.playStation(station) { recentlyPlayedViewModel.addStationToHistory(it) }
+                        }
+                    )
+                }
 
             1 -> {
                 SearchTab(
