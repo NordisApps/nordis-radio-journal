@@ -55,7 +55,8 @@ fun MainScreen(
     val filteredStations by stationsViewModel.filteredStations.collectAsState()
     val uiState by stationsViewModel.uiStateFlow.collectAsState()
     val playerState by playerViewModel.uiStateFlow.collectAsState()
-    val favourites = uiState.favouriteStations
+    val favourites by favouritesViewModel.favouriteStations.collectAsState()
+    val recentlyPlayed by recentlyPlayedViewModel.recentlyPlayedStations.collectAsState()
     val facts = factsViewModel.facts.collectAsState().value
     var selectedAnnouncement by remember { mutableStateOf<Announcement?>(null) }
 
@@ -85,7 +86,7 @@ fun MainScreen(
                         onFactsLoad = { factsViewModel.loadFacts() },
                         onAnnouncementClick = { selectedAnnouncement = it },
                         currentLanguage = currentLanguage,
-                        recentlyPlayed = uiState.recentlyPlayedStations,
+                        recentlyPlayed = recentlyPlayed,
                         onStationClick = { station ->
                             playerViewModel.playStation(station) { recentlyPlayedViewModel.addStationToHistory(it) }
                         }

@@ -9,10 +9,12 @@ import com.google.firebase.database.FirebaseDatabase
 import com.nordisapps.nordisradiojournal.data.FAVORITE_STATIONS_KEY
 import com.nordisapps.nordisradiojournal.data.Station
 import com.nordisapps.nordisradiojournal.data.dataStore
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlin.collections.contains
 
 class FavouritesViewModel(
     application: Application,
@@ -21,29 +23,38 @@ class FavouritesViewModel(
 
     private val context get() = getApplication<Application>().applicationContext
 
-    fun toggleFavourite(station: Station) {
-        val currentFavourites = shared.uiState.value.favouriteStations.toMutableList()
-        if (currentFavourites.any { it.id == station.id }) {
-            currentFavourites.removeAll { it.id == station.id }
-        } else {
-            currentFavourites.add(station)
+    val favouriteStations: StateFlow<List<Station>> = shared.uiState
+        .map { state ->
+            state.favouriteIds.mapNotNull { id ->
+                state.stations.find { it.id == id }
+            }
         }
-        shared.update { it.copy(favouriteStations = currentFavourites) }
-        saveFavourites()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    fun toggleFavourite(station: Station) {
+        val stationId = station.id ?: return
+        val currentIds = shared.uiState.value.favouriteIds.toMutableList()
+        if (currentIds.contains(stationId)) {
+            currentIds.remove(stationId)
+        } else {
+            currentIds.add(stationId)
+        }
+        shared.update { it.copy(favouriteIds = currentIds) }
+        saveFavourites(currentIds)
     }
 
-    private fun saveFavourites() {
+    private fun saveFavourites(favoriteIds: List<String>) {
         viewModelScope.launch {
             val user = FirebaseAuth.getInstance().currentUser
-            val favoriteIds = shared.uiState.value.favouriteStations.mapNotNull { it.id }.toSet()
+            val idsSet = favoriteIds.toSet()
             if (user != null) {
                 FirebaseDatabase.getInstance()
                     .getReference("favorites")
                     .child(user.uid)
-                    .setValue(favoriteIds.toList())
+                    .setValue(idsSet.toList())
             } else {
                 context.dataStore.edit { preferences ->
-                    preferences[FAVORITE_STATIONS_KEY] = favoriteIds
+                    preferences[FAVORITE_STATIONS_KEY] = idsSet
                 }
             }
         }
@@ -52,9 +63,6 @@ class FavouritesViewModel(
     fun loadFavourites() {
         viewModelScope.launch {
             val user = FirebaseAuth.getInstance().currentUser
-            val stations = shared.uiState
-                .map { it.stations }
-                .first { it.isNotEmpty() }
 
             if (user != null) {
                 FirebaseDatabase.getInstance()
@@ -64,14 +72,12 @@ class FavouritesViewModel(
                     .addOnSuccessListener { snapshot ->
                         val favoriteIds =
                             snapshot.children.mapNotNull { it.getValue(String::class.java) }
-                        val favStations = stations.filter { it.id in favoriteIds }
-                        shared.update { it.copy(favouriteStations = favStations) }
+                        shared.update { it.copy(favouriteIds = favoriteIds) }
                     }
             } else {
                 val preferences = context.dataStore.data.first()
-                val favoriteIds = preferences[FAVORITE_STATIONS_KEY] ?: emptySet()
-                val favStations = stations.filter { it.id in favoriteIds }
-                shared.update { it.copy(favouriteStations = favStations) }
+                val favoriteIds = (preferences[FAVORITE_STATIONS_KEY] ?: emptySet()).toList()
+                shared.update { it.copy(favouriteIds = favoriteIds) }
             }
         }
     }
@@ -80,10 +86,6 @@ class FavouritesViewModel(
         viewModelScope.launch {
             val preferences = context.dataStore.data.first()
             val localIds = preferences[FAVORITE_STATIONS_KEY] ?: emptySet()
-
-            val stations = shared.uiState
-                .map { it.stations }
-                .first { it.isNotEmpty() }
 
             if (localIds.isEmpty()) {
                 loadFavourites()
@@ -107,8 +109,7 @@ class FavouritesViewModel(
                             prefs[FAVORITE_STATIONS_KEY] = emptySet()
                         }
                     }
-                    val favStations = stations.filter { it.id in mergedIds }
-                    shared.update { it.copy(favouriteStations = favStations) }
+                    shared.update { it.copy(favouriteIds = mergedIds) }
                 }
             }
         }

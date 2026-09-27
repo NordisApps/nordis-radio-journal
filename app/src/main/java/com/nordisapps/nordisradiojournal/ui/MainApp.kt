@@ -89,6 +89,7 @@ fun MainApp(
     var selectedTab by rememberSaveable(initialTab) { mutableIntStateOf(initialTab) }
     val uiState by stationsViewModel.uiStateFlow.collectAsState()
     val playerState by playerViewModel.uiStateFlow.collectAsState()
+    val favouriteStations by favouritesViewModel.favouriteStations.collectAsState()
     val hasChristmasAnnouncement = announcementsViewModel.announcements
         .any { it.typeEnum == AnnouncementType.CHRISTMAS }
 
@@ -265,7 +266,7 @@ fun MainApp(
                     isPlaying = playerState.isPlaying,
                     onPlayPauseClick = { playerViewModel.togglePlayPause() },
                     currentBitrate = playerState.currentBitrate,
-                    favouriteStations = uiState.favouriteStations,
+                    favouriteStations = favouriteStations,
                     onToggleFavourite = { favouritesViewModel.toggleFavourite(playerState.currentStation!!) },
                     onDismiss = { showFullPlayer = false },
                     onSleepTimerSet = { playerViewModel.setSleepTimer(it) },

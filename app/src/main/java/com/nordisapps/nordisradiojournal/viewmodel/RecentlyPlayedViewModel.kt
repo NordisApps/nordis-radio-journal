@@ -7,8 +7,11 @@ import androidx.lifecycle.viewModelScope
 import com.nordisapps.nordisradiojournal.data.RECENTLY_PLAYED_KEY
 import com.nordisapps.nordisradiojournal.data.Station
 import com.nordisapps.nordisradiojournal.data.dataStore
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class RecentlyPlayedViewModel(
@@ -18,22 +21,29 @@ class RecentlyPlayedViewModel(
 
     private val context get() = getApplication<Application>().applicationContext
 
+    val recentlyPlayedStations: StateFlow<List<Station>> = shared.uiState
+        .map { state ->
+            state.recentlyPlayedIds.mapNotNull { id ->
+                state.stations.find { it.id == id }
+            }
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     fun addStationToHistory(station: Station) {
+        val stationId = station.id ?: return
         viewModelScope.launch {
-            val currentHistory = shared.uiState.value.recentlyPlayedStations.toMutableList()
+            val currentIds = shared.uiState.value.recentlyPlayedIds.toMutableList()
+            currentIds.removeAll { it == stationId }
+            currentIds.add(0, stationId)
+            val updatedIds = currentIds.take(3)
 
-            currentHistory.removeAll { it.id == station.id }
-            currentHistory.add(0, station)
-            val updatedHistory = currentHistory.take(3)
-
-            shared.update { it.copy(recentlyPlayedStations = updatedHistory) }
-            saveRecentlyPlayed(updatedHistory)
+            shared.update { it.copy(recentlyPlayedIds = updatedIds) }
+            saveRecentlyPlayed(updatedIds)
         }
     }
 
-    private fun saveRecentlyPlayed(history: List<Station>) {
+    private fun saveRecentlyPlayed(historyIds: List<String>) {
         viewModelScope.launch {
-            val historyIds = history.mapNotNull { it.id }
             val historyString = historyIds.joinToString(",")
             context.dataStore.edit { preferences ->
                 preferences[RECENTLY_PLAYED_KEY] = historyString
@@ -45,18 +55,8 @@ class RecentlyPlayedViewModel(
         viewModelScope.launch {
             val preferences = context.dataStore.data.first()
             val historyString = preferences[RECENTLY_PLAYED_KEY] ?: ""
-            if (historyString.isEmpty()) return@launch
-
-            val historyIds = historyString.split(",")
-
-            val stations = shared.uiState
-                .map { it.stations }
-                .first { it.isNotEmpty() }
-
-            val historyStations = historyIds.mapNotNull { id ->
-                stations.find { it.id == id }
-            }
-            shared.update { it.copy(recentlyPlayedStations = historyStations) }
+            val historyIds = if (historyString.isEmpty()) emptyList() else historyString.split(",")
+            shared.update { it.copy(recentlyPlayedIds = historyIds) }
         }
     }
 }
