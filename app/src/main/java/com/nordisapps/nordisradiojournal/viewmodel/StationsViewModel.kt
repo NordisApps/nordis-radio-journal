@@ -58,19 +58,13 @@ class StationsViewModel(
 
     fun setSelectedCity(city: String?) {
         _filters.update {
-            it.copy(
-                city = city,
-                coverage = if (city != null) setOf(city) else emptySet()
-            )
+            it.copy(city = city)
         }
     }
 
     fun setSelectedCoverage(coverage: Set<String>) {
         _filters.update {
-            it.copy(
-                coverage = coverage,
-                city = if (coverage.size == 1) coverage.first() else null
-            )
+            it.copy(coverage = coverage)
         }
     }
 
@@ -110,14 +104,10 @@ class StationsViewModel(
                 ignoreCase = true
             ) == true
 
-            val matchesCity = if (filters.coverage.isNotEmpty()) {
-                true
-            } else {
-                filters.city.isNullOrBlank() || station.mainCity?.equals(
+            val matchesCity = filters.city.isNullOrBlank() || station.mainCity?.equals(
                     filters.city,
                     ignoreCase = true
                 ) == true
-            }
 
             val matchesCoverage =
                 filters.coverage.isEmpty() || station.coverage?.any { it in filters.coverage } == true
