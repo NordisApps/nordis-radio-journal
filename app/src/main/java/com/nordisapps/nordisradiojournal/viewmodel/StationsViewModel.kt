@@ -4,6 +4,7 @@ import android.app.Application
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.nordisapps.nordisradiojournal.data.freqValue
 import com.nordisapps.nordisradiojournal.data.model.SearchFilters
 import com.nordisapps.nordisradiojournal.data.model.UiState
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -125,6 +126,7 @@ class StationsViewModel(
 
             matchesQuery && matchesCountry && matchesCity && matchesCoverage && matchesCategory
         }
+            .sortedWith(compareBy({ it.freqValue() == null }, { it.freqValue() }))
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun loadStations() {
