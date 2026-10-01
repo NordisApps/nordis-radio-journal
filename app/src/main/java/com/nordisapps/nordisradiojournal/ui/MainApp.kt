@@ -60,6 +60,7 @@ import com.nordisapps.nordisradiojournal.viewmodel.PlayerViewModel
 import com.nordisapps.nordisradiojournal.viewmodel.RadioFactsViewModel
 import com.nordisapps.nordisradiojournal.viewmodel.RecentlyPlayedViewModel
 import com.nordisapps.nordisradiojournal.viewmodel.StationsViewModel
+import java.time.LocalDate
 
 @androidx.annotation.OptIn(UnstableApi::class)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -93,6 +94,8 @@ fun MainApp(
     val favouriteStations by favouritesViewModel.favouriteStations.collectAsState()
     val hasChristmasAnnouncement = announcementsViewModel.announcements
         .any { it.typeEnum == AnnouncementType.CHRISTMAS }
+    val isRadioJournalBirthday = LocalDate.now().monthValue == 10 &&
+            LocalDate.now().dayOfMonth == 2
 
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -133,6 +136,9 @@ fun MainApp(
                                     )
                                     if (hasChristmasAnnouncement) {
                                         append(" 🎄")
+                                    }
+                                    if (isRadioJournalBirthday) {
+                                        append(" 🎂")
                                     }
                                 }
                             )
