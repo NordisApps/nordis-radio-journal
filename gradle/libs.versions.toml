@@ -74,6 +74,8 @@ google-firebase-database = { module = "com.google.firebase:firebase-database" }
 google-firebase-firestore = { module = "com.google.firebase:firebase-firestore" }
 google-firebase-auth = { module = "com.google.firebase:firebase-auth" }
 google-firebase-ai = { module = "com.google.firebase:firebase-ai" }
+google-firebase-appcheck-playintegrity = { module = "com.google.firebase:firebase-appcheck-playintegrity" }
+google-firebase-appcheck-debug = { module = "com.google.firebase:firebase-appcheck-debug" }
 
 # Google Sign-In
 googleid = { module = "com.google.android.libraries.identity.googleid:googleid", version.ref = "googleid" }

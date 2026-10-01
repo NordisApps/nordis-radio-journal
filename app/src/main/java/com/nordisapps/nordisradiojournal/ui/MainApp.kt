@@ -1,0 +1,291 @@
+@file:Suppress("AssignedValueIsNeverRead")
+
+package com.nordisapps.nordisradiojournal.ui
+
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.AccountCircle
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.outlined.StarBorder
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.media3.common.util.UnstableApi
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import com.nordisapps.nordisradiojournal.R
+import com.nordisapps.nordisradiojournal.data.model.AdminState
+import com.nordisapps.nordisradiojournal.data.model.AnnouncementType
+import com.nordisapps.nordisradiojournal.ui.components.FullPlayer
+import com.nordisapps.nordisradiojournal.ui.components.MiniPlayer
+import com.nordisapps.nordisradiojournal.ui.home.SnowOverlay
+import com.nordisapps.nordisradiojournal.ui.theme.ThemeMode
+import com.nordisapps.nordisradiojournal.viewmodel.AdminViewModel
+import com.nordisapps.nordisradiojournal.viewmodel.AnnouncementsViewModel
+import com.nordisapps.nordisradiojournal.viewmodel.FavouritesViewModel
+import com.nordisapps.nordisradiojournal.viewmodel.PlayerViewModel
+import com.nordisapps.nordisradiojournal.viewmodel.RadioFactsViewModel
+import com.nordisapps.nordisradiojournal.viewmodel.RecentlyPlayedViewModel
+import com.nordisapps.nordisradiojournal.viewmodel.StationsViewModel
+import java.time.LocalDate
+
+@androidx.annotation.OptIn(UnstableApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MainApp(
+    playerViewModel: PlayerViewModel,
+    stationsViewModel: StationsViewModel,
+    recentlyPlayedViewModel: RecentlyPlayedViewModel,
+    favouritesViewModel: FavouritesViewModel,
+    adminViewModel: AdminViewModel,
+    announcementsViewModel: AnnouncementsViewModel,
+    userPhotoUrl: String?,
+    userName: String?,
+    userEmail: String?,
+    onSignInClick: () -> Unit,
+    onSignOutClick: () -> Unit,
+    onLanguageChange: (String) -> Unit,
+    currentLanguage: String,
+    initialTab: Int,
+    currentTheme: ThemeMode,
+    onThemeChange: (ThemeMode) -> Unit,
+    factsViewModel: RadioFactsViewModel
+) {
+    val context = LocalContext.current
+    val navController = rememberNavController()
+    var showFullPlayer by remember { mutableStateOf(false) }
+    var selectedTab by rememberSaveable(initialTab) { mutableIntStateOf(initialTab) }
+    val uiState by stationsViewModel.uiStateFlow.collectAsState()
+    val stations by stationsViewModel.stations.collectAsState()
+    val playerState by playerViewModel.uiStateFlow.collectAsState()
+    val favouriteStations by favouritesViewModel.favouriteStations.collectAsState()
+    val hasChristmasAnnouncement = announcementsViewModel.announcements
+        .any { it.typeEnum == AnnouncementType.CHRISTMAS }
+    val isRadioJournalBirthday = LocalDate.now().monthValue == 10 &&
+            LocalDate.now().dayOfMonth == 2
+
+
+    Box(modifier = Modifier.fillMaxSize()) {
+
+        Scaffold(
+            topBar = {
+                Column {
+                    TopAppBar(
+                        title = {
+                            val route =
+                                navController.currentBackStackEntryAsState().value?.destination?.route
+
+                            Text(
+                                text = buildString {
+                                    append(
+                                        when {
+                                            route == "settings" -> stringResource(R.string.settings_title)
+                                            route == "player_settings" -> stringResource(R.string.player_settings_title)
+                                            route == "admin_panel" -> "Админ панель"
+                                            route == "about" -> stringResource(R.string.about_app_title)
+                                            route?.startsWith("edit_station_screen") == true -> {
+                                                val stationId =
+                                                    navController.currentBackStackEntry
+                                                        ?.arguments
+                                                        ?.getString("stationId")
+                                                if (stationId == null) "Новая станция" else "Редактирование"
+                                            }
+                                            route?.startsWith("edit_announcement_screen") == true -> {
+                                                val announcementId =
+                                                    navController.currentBackStackEntry
+                                                        ?.arguments
+                                                        ?.getString("announcementId")
+                                                if (announcementId == null) "Новый анонс" else "Редактирование анонса"
+                                            }
+
+                                            else -> stringResource(R.string.app_name)
+                                        }
+                                    )
+                                    if (hasChristmasAnnouncement) {
+                                        append(" 🎄")
+                                    }
+                                    if (isRadioJournalBirthday) {
+                                        append(" 🎂")
+                                    }
+                                }
+                            )
+                        },
+                        navigationIcon = {
+                            val route =
+                                navController.currentBackStackEntryAsState().value?.destination?.route
+                            when {
+                                route == "settings" || route == "player_settings" || route == "admin_panel" || route == "about" || route?.startsWith(
+                                    "edit_station_screen"
+                                ) == true || route?.startsWith("edit_announcement_screen") == true -> {
+                                    IconButton(onClick = { navController.popBackStack() }) {
+                                        Icon(
+                                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                            contentDescription = null
+                                        )
+                                    }
+                                }
+                            }
+                        },
+                        actions = {
+                            val route =
+                                navController.currentBackStackEntryAsState().value?.destination?.route
+
+                            if (route?.startsWith("edit_station_screen") != true && route?.startsWith("edit_announcement_screen") != true) {
+                                IconButton(onClick = {
+                                    navController.navigateSingleTop("settings")
+                                }) {
+                                    Icon(
+                                        Icons.Default.Settings,
+                                        contentDescription = "Настройки"
+                                    )
+                                }
+                            }
+                        }
+                    )
+                    HorizontalDivider()
+                }
+            },
+            bottomBar = {
+                val route = navController.currentBackStackEntryAsState().value?.destination?.route
+                if (route == "home") {
+                    NavigationBar {
+                        val tabLabels = listOf(
+                            R.string.nav_home,
+                            R.string.nav_search,
+                            R.string.nav_favorites,
+                            R.string.nav_account
+                        )
+                        val tabIcons = listOf(
+                            Icons.Filled.Home to Icons.Outlined.Home,
+                            Icons.Filled.Search to Icons.Outlined.Search,
+                            Icons.Filled.Star to Icons.Outlined.StarBorder,
+                            Icons.Filled.AccountCircle to Icons.Outlined.AccountCircle
+                        )
+                        tabLabels.forEachIndexed { index, labelRes ->
+                            val (filledIcon, outlinedIcon) = tabIcons[index]
+                            NavigationBarItem(
+                                icon = {
+                                    Icon(
+                                        imageVector = if (selectedTab == index) filledIcon else outlinedIcon,
+                                        contentDescription = null
+                                    )
+                                },
+                                label = { Text(stringResource(labelRes)) },
+                                selected = selectedTab == index,
+                                onClick = {
+                                    selectedTab = index
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+        ) { padding ->
+            Box(
+                Modifier
+                    .padding(padding)
+                    .background(Color.Transparent)
+            ) {
+                AppNavigation(
+                    navController = navController,
+                    stationsViewModel = stationsViewModel,
+                    recentlyPlayedViewModel = recentlyPlayedViewModel,
+                    favouritesViewModel = favouritesViewModel,
+                    adminViewModel = adminViewModel,
+                    announcementsViewModel = announcementsViewModel,
+                    playerViewModel = playerViewModel,
+                    factsViewModel = factsViewModel,
+                    uiState = uiState,
+                    stations = stations,
+                    selectedTab = selectedTab,
+                    currentLanguage = currentLanguage,
+                    onLanguageChange = onLanguageChange,
+                    currentTheme = currentTheme,
+                    onThemeChange = onThemeChange,
+                    context = context,
+                    userPhotoUrl = userPhotoUrl,
+                    userName = userName,
+                    userEmail = userEmail,
+                    isAdmin = uiState.adminState is AdminState.Admin,
+                    onSignInClick = onSignInClick,
+                    onSignOutClick = onSignOutClick,
+                    onAdminPanelClick = {
+                        navController.navigateSingleTop("admin_panel")
+                    }
+                )
+
+                if (navController.currentBackStackEntryAsState().value?.destination?.route == "home") {
+                    playerState.currentStation?.let { station ->
+                        MiniPlayer(
+                            station = station,
+                            trackTitle = playerState.currentTrackTitle,
+                            isPlaying = playerState.isPlaying,
+                            onPlayPauseClick = { playerViewModel.togglePlayPause() },
+                            onClose = { playerViewModel.closePlayer() },
+                            onExpandClick = { showFullPlayer = true },
+                            modifier = Modifier.align(Alignment.BottomCenter)
+                        )
+                    }
+                }
+            }
+        }
+        AnimatedVisibility(
+            visible = showFullPlayer,
+            enter = slideInVertically(initialOffsetY = { it }),
+            exit = slideOutVertically(targetOffsetY = { it })
+        ) {
+            if (playerState.currentStation != null) {
+                FullPlayer(
+                    station = playerState.currentStation!!,
+                    trackTitle = playerState.currentTrackTitle,
+                    isPlaying = playerState.isPlaying,
+                    onPlayPauseClick = { playerViewModel.togglePlayPause() },
+                    currentBitrate = playerState.currentBitrate,
+                    favouriteStations = favouriteStations,
+                    onToggleFavourite = { favouritesViewModel.toggleFavourite(playerState.currentStation!!) },
+                    onDismiss = { showFullPlayer = false },
+                    onSleepTimerSet = { playerViewModel.setSleepTimer(it) },
+                    activeTimerMinutes = playerState.activeTimerMinutes,
+                    endTimerTime = playerState.endTimerTime
+                )
+            }
+        }
+        SnowOverlay(
+            enabled = hasChristmasAnnouncement && !showFullPlayer,
+            snowCount = 90
+        )
+    }
+}

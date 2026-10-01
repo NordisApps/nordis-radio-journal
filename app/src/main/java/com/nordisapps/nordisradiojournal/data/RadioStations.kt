@@ -1,4 +1,4 @@
-package com.nordisapps.nordisradiojournal
+package com.nordisapps.nordisradiojournal.data
 
 import android.util.Log
 import com.google.firebase.database.FirebaseDatabase
@@ -34,9 +34,14 @@ suspend fun loadStations(): List<Station> {
             val station = child.getValue(Station::class.java)
             station?.copy(id = child.key)
         }
-        stations.sortedBy { it.displayId }
+        stations
     } catch (e: Exception) {
         Log.e("RadioStations", "Error loading stations from Firebase", e)
         emptyList()
     }
 }
+
+fun Station.freqValue(): Double? =
+    freq?.replace(",", ".")
+        ?.replace(Regex("[^0-9.]"), "")
+        ?.toDoubleOrNull()

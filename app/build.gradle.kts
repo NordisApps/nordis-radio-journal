@@ -29,8 +29,8 @@ android {
         applicationId = "com.nordisapps.nordisradiojournal"
         minSdk = 26
         targetSdk = 36
-        versionCode = 8
-        versionName = "0.4-alpha"
+        versionCode = 9
+        versionName = "0.5-alpha"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -100,6 +100,7 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.media3.hls)
     implementation(libs.androidx.media3.session)
+    implementation(libs.google.firebase.appcheck.playintegrity)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -107,4 +108,5 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+    implementation(libs.google.firebase.appcheck.debug)
 }
