@@ -73,6 +73,7 @@ fun SearchTab(
     selectedCityKey: String?,
     selectedCoverageKeys: Set<String>,
     availableCountries: List<String>,
+    availableCoverages: List<String>,
     citiesByCountry: Map<String, List<String>>,
     filteredStations: List<Station>,
     favourites: List<Station>,
@@ -303,8 +304,8 @@ fun SearchTab(
                         }
                     }
 
-                    val coverageOptions = remember(citiesByCountry, selectedCountryKey) {
-                        (citiesByCountry[selectedCountryKey] ?: emptyList()).map { LocationItem(it, it) }
+                    val coverageOptions = remember(availableCoverages) {
+                        availableCoverages.map { LocationItem(it, it) }
                     }
 
                     FilterChip(

@@ -50,6 +50,17 @@ class StationsViewModel(
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
+    val availableCoverages: StateFlow<List<String>> = shared.stations
+        .map { stations ->
+            stations
+                .flatMap { it.coverage.orEmpty() }
+                .map { it.trim() }
+                .filter { it.isNotBlank() }
+                .distinct()
+                .sorted()
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     fun setSearchQuery(query: String) {
         _filters.update { it.copy(query = query) }
     }

@@ -96,6 +96,7 @@ fun MainScreen(
                 1 -> {
                     val availableCountries by stationsViewModel.availableCountries.collectAsState()
                     val citiesByCountry by stationsViewModel.citiesByCountry.collectAsState()
+                    val availableCoverages by stationsViewModel.availableCoverages.collectAsState()
 
                     SearchTab(
                         searchQuery = filters.query,
@@ -104,6 +105,7 @@ fun MainScreen(
                         selectedCoverageKeys = filters.coverage,
                         selectedCategoryKeys = filters.category,
                         availableCountries = availableCountries,
+                        availableCoverages = availableCoverages,
                         citiesByCountry = citiesByCountry,
                         filteredStations = filteredStations,
                         favourites = favourites,
