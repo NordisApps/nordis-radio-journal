@@ -22,8 +22,8 @@ class AdminViewModel(
         dbRef.child(stationId).removeValue()
             .addOnSuccessListener {
                 Log.d("AdminViewModel", "Station deleted from Firebase: $stationId")
-                val updated = shared.uiState.value.stations.filterNot { it.id == stationId }
-                shared.update { it.copy(stations = updated) }
+                val updated = shared.stations.value.filterNot { it.id == stationId }
+                shared.stations.value = updated
                 onSuccess()
             }
             .addOnFailureListener { error ->

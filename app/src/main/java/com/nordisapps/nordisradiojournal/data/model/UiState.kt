@@ -9,7 +9,6 @@ sealed class AdminState {
 }
 
 data class UiState(
-    val stations: List<Station> = emptyList(),
     val isLoading: Boolean = true,
     val currentStation: Station? = null,
     val isPlaying: Boolean = false,

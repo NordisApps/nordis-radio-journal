@@ -88,6 +88,7 @@ fun MainApp(
     var showFullPlayer by remember { mutableStateOf(false) }
     var selectedTab by rememberSaveable(initialTab) { mutableIntStateOf(initialTab) }
     val uiState by stationsViewModel.uiStateFlow.collectAsState()
+    val stations by stationsViewModel.stations.collectAsState()
     val playerState by playerViewModel.uiStateFlow.collectAsState()
     val favouriteStations by favouritesViewModel.favouriteStations.collectAsState()
     val hasChristmasAnnouncement = announcementsViewModel.announcements
@@ -222,6 +223,7 @@ fun MainApp(
                     playerViewModel = playerViewModel,
                     factsViewModel = factsViewModel,
                     uiState = uiState,
+                    stations = stations,
                     selectedTab = selectedTab,
                     currentLanguage = currentLanguage,
                     onLanguageChange = onLanguageChange,

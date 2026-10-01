@@ -4,6 +4,7 @@ import android.app.Application
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.nordisapps.nordisradiojournal.data.Station
 import com.nordisapps.nordisradiojournal.data.freqValue
 import com.nordisapps.nordisradiojournal.data.model.SearchFilters
 import com.nordisapps.nordisradiojournal.data.model.UiState
@@ -26,20 +27,21 @@ class StationsViewModel(
     private val _filters = MutableStateFlow(SearchFilters())
     val filters: StateFlow<SearchFilters> = _filters
     val uiStateFlow: StateFlow<UiState> = shared.uiState
+    val stations: StateFlow<List<Station>> = shared.stations
 
     init {
         loadStations()
     }
 
-    val availableCountries: StateFlow<List<String>> = shared.uiState
-        .map { state ->
-            state.stations.mapNotNull { it.country?.trim() }.distinct().sorted()
+    val availableCountries: StateFlow<List<String>> = shared.stations
+        .map { stations ->
+            stations.mapNotNull { it.country?.trim() }.distinct().sorted()
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    val citiesByCountry: StateFlow<Map<String, List<String>>> = shared.uiState
-        .map { state ->
-            state.stations
+    val citiesByCountry: StateFlow<Map<String, List<String>>> = shared.stations
+        .map { stations ->
+            stations
                 .filter { it.country != null && it.mainCity != null }
                 .groupBy { it.country!!.trim() }
                 .mapValues { (_, list) ->
@@ -77,16 +79,16 @@ class StationsViewModel(
     }
 
     val filteredStations = combine(
-        shared.uiState,
+        shared.stations,
         _filters
-    ) { state, filters ->
+    ) { stations, filters ->
         val tokens = filters.query
             .trim()
             .lowercase()
             .split("\\s+".toRegex())
             .filter { it.isNotBlank() }
 
-        state.stations.filter { station ->
+        stations.filter { station ->
             val name = station.name?.lowercase().orEmpty()
             val cityName = station.stationCity?.lowercase().orEmpty()
             val mainCity = station.mainCity?.lowercase().orEmpty()
@@ -105,9 +107,9 @@ class StationsViewModel(
             ) == true
 
             val matchesCity = filters.city.isNullOrBlank() || station.mainCity?.equals(
-                    filters.city,
-                    ignoreCase = true
-                ) == true
+                filters.city,
+                ignoreCase = true
+            ) == true
 
             val matchesCoverage =
                 filters.coverage.isEmpty() || station.coverage?.any { it in filters.coverage } == true
@@ -126,7 +128,7 @@ class StationsViewModel(
 
                 val stationList = fetchStationsFromNetwork()
 
-                shared.update { it.copy(stations = stationList) }
+                shared.stations.value = stationList
             } catch (e: Exception) {
                 Log.e("StationsViewModel", "Error loading stations", e)
             } finally {

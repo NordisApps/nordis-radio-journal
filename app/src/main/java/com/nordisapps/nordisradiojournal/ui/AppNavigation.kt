@@ -16,6 +16,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.nordisapps.nordisradiojournal.data.Station
 import com.nordisapps.nordisradiojournal.ui.settings.SettingsMenu
 import com.nordisapps.nordisradiojournal.data.model.UiState
 import com.nordisapps.nordisradiojournal.tools.AdminPanelScreen
@@ -44,6 +45,7 @@ fun AppNavigation(
     announcementsViewModel: AnnouncementsViewModel,
     factsViewModel: RadioFactsViewModel,
     uiState: UiState,
+    stations: List<Station>,
     selectedTab: Int,
     currentLanguage: String,
     onLanguageChange: (String) -> Unit,
@@ -118,6 +120,7 @@ fun AppNavigation(
             }
             AdminPanelScreen(
                 uiState = uiState,
+                stations = stations,
                 onDeleteStationClicked = { station ->
                     adminViewModel.deleteStation(
                         station = station,
@@ -137,7 +140,7 @@ fun AppNavigation(
                     )
                 },
                 onAddStationClicked = {
-                    val nextId = (uiState.stations.maxOfOrNull { it.displayId ?: 0 }
+                    val nextId = (stations.maxOfOrNull { it.displayId ?: 0 }
                         ?: 0) + 1
                     navController.navigateSingleTop("edit_station_screen?nextDisplayId=$nextId")
                 },
@@ -188,7 +191,7 @@ fun AppNavigation(
                 backStackEntry.arguments?.getString("nextDisplayId")?.toIntOrNull()
             EditStationScreen(
                 stationId = stationId,
-                uiState = uiState,
+                stations = stations,
                 nextDisplayId = nextDisplayId,
                 onSaveStation = { stationToSave ->
                     adminViewModel.saveStation(

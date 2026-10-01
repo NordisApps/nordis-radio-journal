@@ -11,8 +11,8 @@ import com.nordisapps.nordisradiojournal.data.Station
 import com.nordisapps.nordisradiojournal.data.dataStore
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -23,13 +23,14 @@ class FavouritesViewModel(
 
     private val context get() = getApplication<Application>().applicationContext
 
-    val favouriteStations: StateFlow<List<Station>> = shared.uiState
-        .map { state ->
-            state.favouriteIds.mapNotNull { id ->
-                state.stations.find { it.id == id }
-            }
+    val favouriteStations: StateFlow<List<Station>> = combine(
+        shared.uiState,
+        shared.stations
+    ) { state, stations ->
+        state.favouriteIds.mapNotNull { id ->
+            stations.find { it.id == id }
         }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun toggleFavourite(station: Station) {
         val stationId = station.id ?: return
