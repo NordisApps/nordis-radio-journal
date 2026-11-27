@@ -3,7 +3,6 @@ package com.nordisapps.nordisradiojournal
 import android.app.Application
 import coil.ImageLoader
 import coil.decode.SvgDecoder
-import coil.request.CachePolicy
 import com.google.firebase.Firebase
 import com.google.firebase.appcheck.appCheck
 import com.google.firebase.appcheck.debug.DebugAppCheckProviderFactory
@@ -37,10 +36,8 @@ class MyApp : Application() {
             .components {
                 add(SvgDecoder.Factory())
             }
-            .crossfade(true)
-            .diskCachePolicy(CachePolicy.ENABLED)
-            .memoryCachePolicy(CachePolicy.ENABLED)
-            .networkCachePolicy(CachePolicy.ENABLED)
+            .crossfade(false)
+            .respectCacheHeaders(false)
             .build()
     }
 }

@@ -40,6 +40,7 @@ import com.nordisapps.nordisradiojournal.ui.theme.LocalImageLoader
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import androidx.core.net.toUri
+import coil.request.ImageRequest
 import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
@@ -87,29 +88,32 @@ fun RadioStationItem(
                     .padding(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                SubcomposeAsyncImage(
-                    model = icon,
-                    imageLoader = imageLoader,
-                    contentDescription = name,
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clickable { showImageDialog = true }
-                ) {
-                    when (painter.state) {
-                        is AsyncImagePainter.State.Loading -> {
-                            CircularProgressIndicator(modifier = Modifier.size(24.dp))
-                        }
-
-                        is AsyncImagePainter.State.Error -> {
-                            Icon(
-                                imageVector = Icons.Default.Warning,
-                                contentDescription = null,
-                                modifier = Modifier.size(40.dp)
-                            )
-                        }
-
-                        else -> SubcomposeAsyncImageContent()
+                if (icon.isBlank()) {
+                    StationLogoPlaceholder(
+                        name = name,
+                        size = 40.dp,
+                        modifier = Modifier.clickable { showImageDialog = true }
+                    )
+                } else {
+                    val request = remember(icon) {
+                        ImageRequest.Builder(context)
+                            .data(icon)
+                            .memoryCacheKey(icon)
+                            .diskCacheKey(icon)
+                            .crossfade(false)
+                            .build()
                     }
+
+                    SubcomposeAsyncImage(
+                        model = request,
+                        imageLoader = imageLoader,
+                        contentDescription = name,
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clickable { showImageDialog = true },
+                        loading = { StationLogoPlaceholder(name = name, size = 40.dp) },
+                        error = { StationLogoPlaceholder(name = name, size = 40.dp) }
+                    )
                 }
 
                 Spacer(Modifier.width(12.dp))
@@ -317,6 +321,7 @@ fun RadioStationItem(
     if (showImageDialog) {
         EnlargedStationIconDialog(
             iconUrl = icon,
+            name = name,
             onDismiss = { showImageDialog = false }
         )
     }
@@ -325,6 +330,7 @@ fun RadioStationItem(
 @Composable
 private fun EnlargedStationIconDialog(
     iconUrl: String,
+    name: String,
     onDismiss: () -> Unit
 ) {
     val imageLoader = LocalImageLoader.current
@@ -338,29 +344,36 @@ private fun EnlargedStationIconDialog(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                SubcomposeAsyncImage(
-                    model = iconUrl,
-                    imageLoader = imageLoader,
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Fit
-                ) {
-                    when (painter.state) {
-                        is AsyncImagePainter.State.Loading -> {
-                            CircularProgressIndicator(modifier = Modifier.size(24.dp))
-                        }
+                if (iconUrl.isBlank()) {
+                    StationLogoPlaceholder(
+                        name = name,
+                        letterScale = 0.55f,
+                        size = 160.dp
+                    )
+                } else {
+                    SubcomposeAsyncImage(
+                        model = iconUrl,
+                        imageLoader = imageLoader,
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Fit
+                    ) {
+                        when (painter.state) {
+                            is AsyncImagePainter.State.Loading -> {
+                                CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                            }
 
-                        is AsyncImagePainter.State.Error -> {
-                            Icon(
-                                imageVector = Icons.Default.Warning,
-                                contentDescription = "Error loading image",
-                                modifier = Modifier.size(80.dp),
-                                tint = MaterialTheme.colorScheme.error
-                            )
-                        }
+                            is AsyncImagePainter.State.Error -> {
+                                StationLogoPlaceholder(
+                                    name = name,
+                                    letterScale = 0.55f,
+                                    size = 160.dp
+                                )
+                            }
 
-                        else -> {
-                            SubcomposeAsyncImageContent()
+                            else -> {
+                                SubcomposeAsyncImageContent()
+                            }
                         }
                     }
                 }

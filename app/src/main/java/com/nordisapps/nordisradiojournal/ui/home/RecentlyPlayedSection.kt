@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
 import com.nordisapps.nordisradiojournal.R
 import com.nordisapps.nordisradiojournal.data.Station
+import com.nordisapps.nordisradiojournal.ui.components.StationLogoPlaceholder
 import com.nordisapps.nordisradiojournal.ui.theme.LocalImageLoader
 
 private const val COLUMNS = 3
@@ -62,15 +63,29 @@ fun RecentlyPlayedSection(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center
                         ) {
-                            SubcomposeAsyncImage(
-                                modifier = Modifier
-                                    .size(64.dp)
-                                    .weight(1f, fill = false),
-                                contentScale = ContentScale.Fit,
-                                model = station.icon ?: "",
-                                imageLoader = imageLoader,
-                                contentDescription = station.name
-                            )
+                            if (station.icon.isNullOrBlank()) {
+                                StationLogoPlaceholder(
+                                    name = station.name,
+                                    size = 64.dp,
+                                    modifier = Modifier.weight(1f, fill = false)
+                                )
+                            } else {
+                                SubcomposeAsyncImage(
+                                    modifier = Modifier
+                                        .size(64.dp)
+                                        .weight(1f, fill = false),
+                                    contentScale = ContentScale.Fit,
+                                    model = station.icon,
+                                    imageLoader = imageLoader,
+                                    contentDescription = station.name,
+                                    error = {
+                                        StationLogoPlaceholder(
+                                            name = station.name,
+                                            size = 64.dp
+                                        )
+                                    }
+                                )
+                            }
                             Spacer(Modifier.height(8.dp))
                             Text(
                                 text = station.name ?: "",
