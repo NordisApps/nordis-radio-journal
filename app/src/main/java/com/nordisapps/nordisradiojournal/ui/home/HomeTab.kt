@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.EventBusy
 import androidx.compose.material3.CircularProgressIndicator
@@ -47,7 +49,8 @@ fun HomeTab(
     recentlyPlayed: List<Station>,
     onFactsLoad: () -> Unit,
     onAnnouncementClick: (Announcement) -> Unit,
-    onStationClick: (Station) -> Unit
+    onStationClick: (Station) -> Unit,
+    hasMiniPlayer: Boolean
 ) {
     var showLoadingIndicator by remember { mutableStateOf(false) }
 
@@ -60,7 +63,11 @@ fun HomeTab(
         }
     }
 
-    Column(Modifier.padding(vertical = 16.dp)) {
+    Column(
+        Modifier
+            .verticalScroll(rememberScrollState())
+            .padding(vertical = 16.dp)
+    ) {
         Text(
             text = stringResource(R.string.current_events),
             style = MaterialTheme.typography.titleMedium,
@@ -175,5 +182,7 @@ fun HomeTab(
                 )
             }
         }
+
+        Spacer(Modifier.height(if (hasMiniPlayer) 80.dp else 16.dp))
     }
 }

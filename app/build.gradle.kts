@@ -45,7 +45,14 @@ android {
     }
 
     buildTypes {
+        debug {
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-debug"
+            resValue("string", "app_name", "Radio Journal DEBUG")
+        }
+
         release {
+            resValue("string", "app_name", "Radio Journal")
             signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = false
             proguardFiles(
@@ -61,6 +68,7 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
+        resValues = true
     }
 }
 

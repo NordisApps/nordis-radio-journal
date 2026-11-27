@@ -8,7 +8,6 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -32,7 +31,6 @@ import com.nordisapps.nordisradiojournal.viewmodel.RecentlyPlayedViewModel
 import com.nordisapps.nordisradiojournal.viewmodel.StationsViewModel
 
 @androidx.annotation.OptIn(UnstableApi::class)
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
     playerViewModel: PlayerViewModel,
@@ -66,6 +64,7 @@ fun MainScreen(
 
     Column(modifier = Modifier.fillMaxSize()) {
         AnimatedContent(
+            modifier = Modifier.fillMaxSize(),
             targetState = selectedTab,
             transitionSpec = {
                 (fadeIn(animationSpec = tween(200)) + slideInVertically(
@@ -89,7 +88,8 @@ fun MainScreen(
                         recentlyPlayed = recentlyPlayed,
                         onStationClick = { station ->
                             playerViewModel.playStation(station) { recentlyPlayedViewModel.addStationToHistory(it) }
-                        }
+                        },
+                        hasMiniPlayer = playerState.currentStation != null
                     )
                 }
 
